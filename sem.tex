@@ -13,15 +13,23 @@
 % from www.gnu.org or by writing to the Free Software Foundation,
 % Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 %
-\documentclass{book}
+\documentclass[oneside]{scrbook}
 \usepackage{fancyhdr}
 \usepackage{listings}
-\usepackage{graphicx}
-\usepackage{color}
+\usepackage{graphicx,epstopdf}
+\usepackage{xcolor}
 \usepackage{url}
 \usepackage{makeidx}
 
-\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue]{hyperref}
+%\definecolor{cadetblue}{RGB}{116,114,154}
+\definecolor{electricblue}{RGB}{66,139,202}
+\definecolor{royalblue}{RGB}{71,57,146}
+\usepackage[colorlinks=true, citecolor=gray, linkcolor=royalblue,
+    urlcolor=electricblue]{hyperref}
+
+\usepackage{tgschola}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
 
 \title{The Little Book of Semaphores}
 
@@ -29,7 +37,20 @@
 
 \newcommand{\theversion}{Version 2.1.5}
 
-\sloppy
+% Enable hyphenation on `tt` text to have word-break; this allows
+% us to disable the `/sloppy` hack
+%
+% https://groups.google.com/forum/#!topic/comp.text.tex/_M1ByBy6CYo
+\makeatletter
+\DeclareRobustCommand\origttfamily
+        {\not@math@alphabet\ttfamily\mathtt
+         \fontfamily\ttdefault\selectfont\hyphenchar\font=-1}
+\DeclareTextFontCommand{\texttorig}{\origttfamily}
+\DeclareRobustCommand\ttfamily
+        {\not@math@alphabet\ttfamily\mathtt
+         \fontfamily\ttdefault\selectfont\hyphenchar\font=`\-}
+\makeatother
+%\sloppy
 
 \newcommand{\clearemptydoublepage}{\newpage\cleardoublepage}
 \newcommand{\blankpage}{\newpage}
@@ -48,8 +69,16 @@
 % Commands that control the appearance of the listings
 \definecolor{lightgray}{gray}{0.95}
 
-\lstset{basicstyle=\tt, stepnumber=1, frame=tblr, 
-backgroundcolor=lightgray, escapeinside={(*}{*)}}
+\lstset{basicstyle=\tt, stepnumber=1, frame=tblr,
+backgroundcolor=\color{lightgray}, escapeinside={(*}{*)}}
+
+% Make sure all of the TOC (incl. Chapter headings) are in
+% serif font.
+%
+% http://amyrhoda.wordpress.com/2012/05/30/latex-to-lulu-
+% the-making-of-aosa-table-of-contents-and-chapter-titles/
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\normalfont\rmfamily}
 
 \makeindex
 
@@ -90,7 +119,7 @@ a device-independent representation of a book, which
 can be converted to other formats and printed.
 
 This book was typeset by the author using latex, dvips and ps2pdf,
-among other free, open-source programs.
+among other free and open-source programs.
 The LaTeX source for this book is available from
 \url{http://greenteapress.com/semaphores}.
 
@@ -117,7 +146,7 @@ the most important.  But I do think it is one of the most challenging,
 interesting, and (done right) fun.
 
 I wrote the first edition this book with the goal of identifying
-synchronization idioms and patterns that could be 
+synchronization idioms and patterns that could be
 understood in isolation and then assembled to solve complex problems.
 This was a challenge, because synchronization code doesn't compose
 well; as the number of components increases, the number of interactions
@@ -208,7 +237,7 @@ material.  Thanks!
 \noindent June 1, 2005 \\
 
 
-\section*{Contributor's list}
+\section*{Contributors list}
 
 The following are some of the people who have contributed to this
 book:
@@ -312,8 +341,9 @@ book and found some typos.
 
 % endcontrib
 
+\newpage
 \tableofcontents
-\clearemptydoublepage
+%\clearemptydoublepage
 
 \mainmatter
 
@@ -340,7 +370,7 @@ events.  Examples include:
 
 \end{description}
 
-In real life we often check and enforce synchronization constraints 
+In real life we often check and enforce synchronization constraints
 using a clock.  How do we know if A happened before B?  If we
 know what time both events occurred, we can just compare the times.
 
@@ -405,7 +435,7 @@ Puzzle: Assuming that Bob is willing to follow simple instructions, is
 there any way you can {\em guarantee} that tomorrow you will eat lunch
 before Bob?
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section {Serialization with messages}
 \label{serialization}
 
@@ -415,24 +445,26 @@ seem trivial, but the underlying idea, message passing, is a real
 solution for many synchronization problems.
 At the risk of belaboring the obvious, consider this timeline.
 
+\begin{center}
 \begin{minipage}[t]{2in}
-You                
-\begin{lstlisting}[labelstyle=a, indent=25pt]{}
-Eat breakfast 
-Work          
-Eat lunch     
+You
+\begin{lstlisting}[]{}
+Eat breakfast
+Work
+Eat lunch
 Call Bob
 \end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{2in}
 Bob
-\begin{lstlisting}[labelstyle=b, indent=25pt]{}
+\begin{lstlisting}[]{}
 Eat breakfast
 Wait for a call
 Eat lunch
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 The first column is a list of actions you perform; in other words,
 your thread of execution.  The second column is Bob's thread of
@@ -488,19 +520,21 @@ is not possible to tell, by looking at the program, what will happen
 when it executes.  Here is a simple example of a
 non-deterministic program:
 
+\begin{center}
 \begin{minipage}[t]{2in}
-Thread A                
-\begin{lstlisting}[labelstyle=a, indent=25pt]{}
+Thread A
+\begin{lstlisting}[]{}
 print "yes"
 \end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{2in}
 Thread B
-\begin{lstlisting}[labelstyle=b, indent=25pt]{}
+\begin{lstlisting}[]{}
 print "no"
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 Because the two threads run concurrently, the order of
 execution depends on the scheduler.  During any given run
@@ -548,9 +582,10 @@ reads, does not generally create a synchronization problem.
 In the following example, {\tt x} is a shared variable accessed
 by two writers.
 
+\begin{center}
 \begin{minipage}[t]{2in}
-Thread A                
-\begin{lstlisting}[labelstyle=a, indent=25pt]{}
+Thread A
+\begin{lstlisting}[]{}
 x = 5
 print x
 \end{lstlisting}
@@ -558,10 +593,11 @@ print x
 \hfill
 \begin{minipage}[t]{2in}
 Thread B
-\begin{lstlisting}[labelstyle=b, indent=25pt]{}
+\begin{lstlisting}[]{}
 x = 7
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 What value of {\tt x} gets printed?  What is the final value of {\tt
 x} when all these statements have executed?  It depends on the order
@@ -593,19 +629,21 @@ new value is the old value plus one.  The following example
 shows a shared variable, {\tt count}, being updated concurrently
 by two threads.
 
+\begin{center}
 \begin{minipage}[t]{2in}
-Thread A                
-\begin{lstlisting}[labelstyle=a, indent=25pt]{}
+Thread A
+\begin{lstlisting}[]{}
 count = count + 1
 \end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{2in}
 Thread B
-\begin{lstlisting}[labelstyle=b, indent=25pt]{}
+\begin{lstlisting}[]{}
 count = count + 1
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 At first glance, it is not obvious that there is a synchronization
 problem here.  There are only two execution paths, and they
@@ -617,9 +655,10 @@ the update takes two steps, a read and a write.
 The problem is more obvious if we rewrite the code with a temporary
 variable, {\tt temp}.
 
+\begin{center}
 \begin{minipage}[t]{2in}
-Thread A                
-\begin{lstlisting}[labelstyle=a, indent=25pt]{}
+Thread A
+\begin{lstlisting}[]{}
 temp = count
 count = temp + 1
 \end{lstlisting}
@@ -627,13 +666,14 @@ count = temp + 1
 \hfill
 \begin{minipage}[t]{2in}
 Thread B
-\begin{lstlisting}[labelstyle=b, indent=25pt]{}
+\begin{lstlisting}[]{}
 temp = count
 count = temp + 1
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
-Now consider the following execution path 
+Now consider the following execution path
 
 \[  a1 < b1 < b2 < a2  \]
 
@@ -648,7 +688,7 @@ This kind of problem is subtle because it is not always possible to
 tell, looking at a high-level program, which operations are
 performed in a single step and which can be interrupted.
 In fact, some computers provide an increment instruction that
-is implemented in hardware cannot be interrupted.
+is implemented in hardware and cannot be interrupted.
 An operation that cannot be interrupted is said to be
 {\bf atomic}.
 
@@ -662,7 +702,7 @@ assumption that all updates and all writes are not atomic,
 and to use synchronization constraints to control concurrent
 access to shared variables.
 
-The most common constraint is mutual exclusion, or mutex,
+The most common constraint is mutual exclusion, or {\bf mutex},
 which I mentioned in Section~\ref{synch}.  Mutual exclusion guarantees
 that only one thread accesses a shared variable at a time,
 eliminating the kinds of synchronization errors in this section.
@@ -684,7 +724,7 @@ cannot predict when lunch will start or how long it will last.  What
 is the minimum number of messages that is required?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Semaphores}
 
 In real life a semaphore is a system of signals used to communicate
@@ -770,25 +810,25 @@ returns a new Semaphore.  The initial value of the semaphore
 is passed as a parameter to the constructor.
 
 The semaphore operations go by different names in different environments.
-The most common alternatives are 
+The most common alternatives are
 %
 \begin{lstlisting}[caption={Semaphore operations}]{}
     fred.increment()
-    fred.decrement()	
+    fred.decrement()
 \end{lstlisting}
 %
 and
 %
 \begin{lstlisting}[caption={Semaphore operations}]{}
     fred.signal()
-    fred.wait()	
+    fred.wait()
 \end{lstlisting}
 %
 and
 %
 \begin{lstlisting}[caption={Semaphore operations}]{}
     fred.V()
-    fred.P()	
+    fred.P()
 \end{lstlisting}
 %
 It may be surprising that there are so many names, but there is a
@@ -809,7 +849,7 @@ If you insist on meaningful names, then I would suggest these:
 
 \begin{lstlisting}[caption={Semaphore operations}]{}
     fred.increment_and_wake_a_waiting_process_if_any()
-    fred.decrement_and_block_if_the_result_is_negative()	
+    fred.decrement_and_block_if_the_result_is_negative()
 \end{lstlisting}
 
 I don't think the world is likely to embrace either of these names
@@ -838,7 +878,7 @@ efficient.
 
 \end{itemize}
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Basic synchronization patterns}
 
 This chapter presents a series of basic synchronization problems and
@@ -860,6 +900,7 @@ problem.
 Assume that we have a semaphore named {\tt sem} with initial value
 0, and that Threads A and B have shared access to it.
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
 \begin{lstlisting}{}
@@ -875,6 +916,7 @@ sem.wait()
 statement b1
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 The word {\tt statement} represents an arbitrary program statement.
 To make the example concrete, imagine that {\tt a1} reads a line
@@ -912,6 +954,7 @@ Puzzle: Generalize the signal pattern so that it works both
 ways.  Thread A has to wait for Thread B and vice versa.  In other
 words, given this code
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
 \begin{lstlisting}{}
@@ -927,6 +970,7 @@ statement b1
 statement b2
 \end{lstlisting}
 \end{minipage}
+\end{center}
 %
 we want to guarantee that {\tt a1} happens before {\tt b2} and
 {\tt b1} happens before {\tt a2}.  In writing your solution, be sure
@@ -942,7 +986,7 @@ rendezvous.  The idea is that two threads rendezvous
 at a point of execution, and neither is allowed to proceed
 until both have arrived.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Rendezvous hint}
 
 The chances are good that you were able to figure out a solution,
@@ -952,11 +996,12 @@ and {\tt bArrived}, and initialize them both to zero.
 As the names suggest, {\tt aArrived} indicates whether Thread A
 has arrived at the rendezvous, and {\tt bArrived} likewise.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Rendezvous solution}
 
 Here is my solution, based on the previous hint:
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
 \begin{lstlisting}{}
@@ -976,10 +1021,12 @@ aArrived.wait()
 statement b2
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 While working on the previous problem, you might have
 tried something like this:
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
 \begin{lstlisting}{}
@@ -999,6 +1046,7 @@ aArrived.wait()
 statement b2
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 This solution also works, although it is probably less
 efficient, since it might have to switch between A and B
@@ -1018,6 +1066,7 @@ proceed until both have arrived.
 Again, while working on the previous problem, you might have
 tried something like this:
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
 \begin{lstlisting}{}
@@ -1037,6 +1086,7 @@ bArrived.signal()
 statement b2
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 If so, I hope you rejected it quickly, because it has a serious
 problem.  Assuming that A arrives first, it will block at its
@@ -1072,22 +1122,24 @@ the mutex.  Only one thread can hold the mutex at a time.
 Puzzle: Add semaphores to the following example to
 enforce mutual exclusion to the shared variable {\tt count}.
 
+\begin{center}
 \begin{minipage}[t]{2in}
 Thread A
-\begin{lstlisting}[labelstep=0, indent=10pt]{}
+\begin{lstlisting}[]{}
 count = count + 1
 \end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{2in}
 Thread B
-\begin{lstlisting}[labelstep=0, indent=10pt]{}
+\begin{lstlisting}[]{}
 count = count + 1
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Mutual exclusion hint}
 
 Create a semaphore named {\tt mutex} that is initialized
@@ -1096,14 +1148,15 @@ access the shared variable; a value of zero means that it
 has to wait for another thread to release the mutex.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Mutual exclusion solution}
 
 Here is a solution:
 
-\begin{minipage}[t]{2in}
+\begin{center}
+\begin{minipage}[t]{2.2in}
 Thread A
-\begin{lstlisting}[labelstep=0, indent=10pt]{}
+\begin{lstlisting}[]{}
 mutex.wait()
     # critical section
     count = count + 1
@@ -1111,15 +1164,16 @@ mutex.signal()
 \end{lstlisting}
 \end{minipage}
 \hfill
-\begin{minipage}[t]{2in}
+\begin{minipage}[t]{2.2in}
 Thread B
-\begin{lstlisting}[labelstep=0, indent=10pt]{}
+\begin{lstlisting}[]{}
 mutex.wait()
     # critical section
     count = count + 1
 mutex.signal()
 \end{lstlisting}
 \end{minipage}
+\end{center}
 
 Since {\tt mutex} is initially 1, whichever thread gets to
 the {\tt wait} first will be able to proceed immediately.
@@ -1135,7 +1189,7 @@ sometimes called a {\bf symmetric} solution.  If the threads have to
 run different code, the solution is {\bf asymmetric}.  Symmetric
 solutions are often easier to generalize.  In this case, the mutex
 solution can handle any number of concurrent threads without
-modification.  As long as every thread waits before 
+modification.  As long as every thread waits before
 performing an update and signals after, then no two threads
 will access {\tt count} concurrently.
 
@@ -1184,7 +1238,7 @@ Enforcing this constraint with semaphores may sound difficult, but it
 is almost trivial.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Multiplex solution}
 
 To allow multiple threads to run in the critical section, just
@@ -1203,8 +1257,8 @@ running concurrently in multiple threads.
 
 \begin{lstlisting}[caption={Multiplex solution}]{}
 multiplex.wait()
-    critical section 
-multiplex.signal()      
+    critical section
+multiplex.signal()
 \end{lstlisting}
 
 What happens if the critical section is occupied and more than one
@@ -1258,7 +1312,7 @@ When the first $n-1$ threads arrive they should block until the $n$th
 thread arrives, at which point all the threads may proceed.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Barrier hint}
 
 For many of the problems in this book I will provide hints
@@ -1281,13 +1335,14 @@ threads can increment it safely.
 be unlocked (1 or more).
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Barrier non-solution}
 
 First I will present a solution that is not quite right, because
 it is useful to examine incorrect solutions and figure out what
 is wrong.
 
+\newpage % hand fmt
 \begin{lstlisting}[caption={Barrier non-solution}]{}
 rendezvous
 
@@ -1310,14 +1365,14 @@ unlocks the barrier.
 Puzzle:  What is wrong with this solution?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Deadlock \#2}
 
 The problem is a deadlock.
 
 An an example, imagine that $n=5$
 and that 4 threads are waiting at the barrier.  The value
-of the semaphore is the number of threads in queue, negated, 
+of the semaphore is the number of threads in queue, negated,
 which is -4.
 
 When the 5th thread signals the barrier, one of the waiting
@@ -1334,7 +1389,7 @@ execution path through this code that does {\em not} cause a deadlock?
 Puzzle: Fix the problem.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Barrier solution}
 \label{barrier}
 
@@ -1375,7 +1430,7 @@ $n$th thread, what state is the turnstile in?  Is there any way the
 barrier might be signaled more than once?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Deadlock \#3}
 
 Since only one thread at a time can pass through the
@@ -1403,7 +1458,7 @@ deadlock.
 Imagine that the first thread enters the
 mutex and then blocks when it reaches the turnstile.
 Since the mutex is locked, no other threads can enter,
-so the condition, {\tt count==n}, will never be true and
+so the condition, {\tt count == n}, will never be true and
 no one will ever unlock the turnstile.
 
 In this case the deadlock is fairly obvious, but it
@@ -1424,7 +1479,7 @@ Puzzle: Rewrite the barrier solution so that after all the threads
 have passed through, the turnstile is locked again.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Reusable barrier non-solution \#1}
 
 Once again, we will start with a simple attempt at a solution
@@ -1459,7 +1514,7 @@ Tragically, though, this code is not quite correct.
 Puzzle: What is the problem?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Reusable barrier problem \#1}
 
 There is a problem spot at Line~\ref{problem} of the previous code.
@@ -1475,7 +1530,7 @@ threads to {\tt wait}, which will cause a deadlock.
 
 Puzzle: Fix the problem.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Reusable barrier non-solution \#2}
 
 This attempt fixes the previous error, but a subtle problem
@@ -1512,7 +1567,7 @@ to the rendezvous.
 Puzzle: Identify and fix the problem.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Reusable barrier hint}
 
 As it is currently written, this code
@@ -1537,7 +1592,7 @@ and then open the second.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Reusable barrier solution}
 
 \begin{lstlisting}[caption={Reusable barrier solution}]{}
@@ -1557,12 +1612,12 @@ turnstile.signal()
 
 mutex.wait()
     count -= 1
-    if count == 0: 
-        turnstile.wait()         # lock the first
-        turnstile2.signal()      # unlock the second
+    if count == 0:
+        turnstile.wait()        # lock the first
+        turnstile2.signal()     # unlock the second
 mutex.signal()
 
-turnstile2.wait()                # second turnstile
+turnstile2.wait()               # second turnstile
 turnstile2.signal()
 \end{lstlisting}
 
@@ -1598,7 +1653,7 @@ intermediate-level claims about the program.  For example:
 
 \item Only the $n$th thread can lock or unlock the turnstiles.
 
-\item Before a thread can unlock the first turnstile, it has to close 
+\item Before a thread can unlock the first turnstile, it has to close
 the second, and vice versa; therefore it is impossible for one thread
 to get ahead of the others by more than one turnstile.
 
@@ -1610,7 +1665,7 @@ prove, you can sometimes find a concise way to convince yourself
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Preloaded turnstile}
 
 One nice thing about a turnstile is that it is a versatile
@@ -1680,9 +1735,9 @@ class Barrier:
         self.mutex.wait()
             self.count += 1
             if self.count == self.n:
-                self.turnstile.signal(self.n) 
+                self.turnstile.signal(self.n)
         self.mutex.signal()
-        self.turnstile.wait()            
+        self.turnstile.wait()
 
     def phase2(self):
         self.mutex.wait()
@@ -1744,7 +1799,7 @@ constraints.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Queue hint}
 
 Here are the variables I used in my solution:
@@ -1754,12 +1809,12 @@ leaderQueue = Semaphore(0)
 followerQueue = Semaphore(0)
 \end{lstlisting}
 
-{\tt leaderQueue} is the queue where leaders wait 
+{\tt leaderQueue} is the queue where leaders wait
 and {\tt followerQueue} is the queue where followers wait.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Queue solution}
 
 Here is the code for leaders:
@@ -1796,7 +1851,7 @@ Twain}.
 
 Puzzle: write a solution to this ``exclusive queue'' problem.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Exclusive queue hint}
 
 Here are the variables I used in my solution:
@@ -1819,7 +1874,7 @@ are done dancing.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Exclusive queue solution}
 
 Here is the code for leaders:
@@ -1832,7 +1887,7 @@ if followers > 0:
 else:
     leaders++
     mutex.signal()
-    leaderQueue.wait()    
+    leaderQueue.wait()
 
 dance()
 rendezvous.wait()
@@ -1859,7 +1914,7 @@ if leaders > 0:
 else:
     followers++
     mutex.signal()
-    followerQueue.wait()    
+    followerQueue.wait()
 
 dance()
 rendezvous.signal()
@@ -1885,14 +1940,14 @@ so the values of the queue semaphores are seldom positive.
 It is possible, though.  See if you can figure out how.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section {Fifo queue}
 \label{Fifo}
 
 If there is more than one thread waiting in queue when a
 semaphore is signaled, there is usually no way to tell which
 thread will be woken.  Some implementations wake threads up
-in a particular order, like first-in-first-out, but the semantics 
+in a particular order, like first-in-first-out, but the semantics
 of semaphores don't require any particular order.
 Even if your environment doesn't provide first-in-first-out
 queueing, you can build it yourself.
@@ -1907,7 +1962,7 @@ For bonus points, your solution should define a class named
 {\tt Fifo} that provides methods named {\tt wait} and {\tt signal}.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Fifo queue hint}
 
 A natural solution is to allocate one semaphore to each thread
@@ -1938,7 +1993,8 @@ other words, you have to enforce exclusive access to
 the Queue.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
+\newpage % hand fmt
 \subsection {Fifo queue solution}
 
 Here is my solution:
@@ -1967,7 +2023,7 @@ soon as possible to minimize contention (and context switches).
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Classical synchronization problems}
 
 In this chapter we examine the classical problems that appear
@@ -2021,6 +2077,7 @@ blocks until a producer adds a new item.
 Assume that producers perform the following operations over and
 over:
 
+\newpage % hand fmt
 \begin{lstlisting}[caption={Basic producer code}]{}
 event = waitForEvent()
 buffer.add(event)
@@ -2040,7 +2097,7 @@ can run concurrently.
 Puzzle: Add synchronization statements to the producer and
 consumer code to enforce the synchronization constraints.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Producer-consumer hint}
 
 Here are the variables you might want to use:
@@ -2085,7 +2142,7 @@ local}.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Producer-consumer solution}
 
 Here is the producer code from my solution.
@@ -2168,7 +2225,7 @@ This is a bad idea.
 Puzzle: why?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Deadlock \#4}
 
 If the consumer is running this code
@@ -2217,7 +2274,7 @@ blocks until a consumer removes an item.
 Assume that we know the size of the buffer.  Call it
 {\tt bufferSize}.  Since we have a semaphore that is keeping
 track of the number of items, it is tempting to write something
-like 
+like
 
 \begin{lstlisting}[caption={Broken finite buffer solution}]{}
 if items >= bufferSize:
@@ -2231,7 +2288,7 @@ and {\tt signal}.
 Puzzle: write producer-consumer code that handles the finite-buffer
 constraint.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Finite buffer producer-consumer hint}
 
 Add a second semaphore to keep track of the number of
@@ -2248,7 +2305,7 @@ When a producer arrives it should decrement {\tt spaces}, at
 which point it might block until the next consumer signals.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Finite buffer producer-consumer solution}
 
 Here is a solution.
@@ -2280,7 +2337,7 @@ availability before getting the mutex.  For best performance,
 they release the mutex before signaling.
 
 
-\section{Readers-writers problem} 
+\section{Readers-writers problem}
 
 The next classical problem, called the Reader-Writer Problem, pertains
 to any situation where a data structure, database, or file system is
@@ -2317,7 +2374,7 @@ readers and writers to access the data structure, and avoiding
 the possibility of deadlock.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Readers-writers hint}
 
 Here is a set of variables that is sufficient to solve the
@@ -2339,7 +2396,7 @@ this convention, ``wait'' usually means ``wait for the condition to
 be true'' and ``signal'' means ``signal that the condition is true''.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Readers-writers solution}
 
 The code for writers is simple.  If the critical section
@@ -2503,8 +2560,8 @@ the existing readers can finish, but no additional readers
 may enter.
 
 
-\clearemptydoublepage
-\subsection {No-starve readers-writers hint}  
+%\clearemptydoublepage
+\subsection {No-starve readers-writers hint}
 
 Here's a hint.  You can add a turnstile for the readers and
 allow writers to lock it.  The writers have to pass through
@@ -2526,12 +2583,12 @@ turnstile = Semaphore(1)
 it locks {\tt roomEmpty} when the first reader
 enters and unlocks it when the last reader exits.
 
-{\tt turnstile} is a turnstile for readers and a 
+{\tt turnstile} is a turnstile for readers and a
 mutex for writers.
 
 
-\clearemptydoublepage
-\subsection {No-starve readers-writers solution}  
+%\clearemptydoublepage
+\subsection {No-starve readers-writers solution}
 
 Here is the writer code:
 
@@ -2567,7 +2624,7 @@ When the writer exits it signals {\tt turnstile}, which unblocks a
 waiting thread, which could be a reader or a writer.  Thus, this
 solution guarantees that at least one writer gets to proceed, but it
 is still possible for a reader to enter while there are writers
-queued.  
+queued.
 
 Depending on the application, it might be a good idea to
 give more priority to writers.  For example, if writers are making
@@ -2593,7 +2650,7 @@ priority to writers.  That is, once a writer arrives, no readers
 should be allowed to enter until all writers have left the system.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Writer-priority readers-writers hint}
 
 As usual, the hint is in the form of variables
@@ -2607,7 +2664,7 @@ noWriters = Semaphore(1)
 \end{lstlisting}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Writer-priority readers-writers solution}
 
 Here is the reader code:
@@ -2659,7 +2716,7 @@ obsolete data with predictable turnaround times.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{No-starve mutex}
 \label{props}
 
@@ -2745,7 +2802,7 @@ running the following code:
 \begin{lstlisting}[caption={Mutex loop}]{}
 while True:
     mutex.wait()
-    # critical section 
+    # critical section
     mutex.signal()
 \end{lstlisting}
 
@@ -2795,7 +2852,7 @@ bound on the number of threads that can proceed ahead of it.  You can
 assume that the total number of threads is finite.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{No-starve mutex hint}
 \label{morris}
 
@@ -2827,7 +2884,7 @@ waiting rooms.  {\tt mutex} helps protect the counters.  {\tt t1} and
 {\tt t2} are the turnstiles.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{No-starve mutex solution}
 
 Here is Morris's solution.
@@ -2836,16 +2893,16 @@ Here is Morris's solution.
 mutex.wait()
     room1 += 1            (*\label{room1begin}*)
 mutex.signal()
-                           
+
 t1.wait()                 (*\label{wait1}*)
     room2 += 1            (*\label{room2begin}*)
     mutex.wait()
     room1 -= 1            (*\label{room1end}*)
 
-    if room1 == 0: 
+    if room1 == 0:
         mutex.signal()
 	t2.signal()
-    else: 
+    else:
         mutex.signal()
 	t1.signal()
 
@@ -2911,7 +2968,7 @@ procession of threads through Room 1.  Because there are a finite
 number of threads, the procession has to end eventually, at which
 point {\tt t1} stays locked and {\tt t2} opens.
 
-In the second phase, threads cascade into Room 3.  
+In the second phase, threads cascade into Room 3.
 Because there are a finite number of threads in Room 2, and
 no new threads can enter, eventually the last thread leaves, at
 which point {\tt t2} locks and {\tt t1} opens.
@@ -2932,7 +2989,7 @@ will assume strong semaphores.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{Dining philosophers}
 \label{dining}
 
@@ -2964,7 +3021,7 @@ the forks are numbered from 0 to 4, so that Philosopher $i$ has
 fork $i$ on the right and fork $i+1$ on
 the left.  Here is a diagram of the situation:
 
-\centerline{\includegraphics[height=2in]{table.eps}}
+\centerline{\includegraphics[height=2in]{table}}
 
 Assuming that the philosophers know how to {\tt think} and {\tt eat},
 our job is to write a version of {\tt get\_forks} and {\tt put\_forks}
@@ -3038,7 +3095,7 @@ be reading Chapter~\ref{next}.
 Puzzle: what's wrong?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Deadlock \#5}
 
 The problem is that the table is round.  As a result, each philosopher
@@ -3051,7 +3108,7 @@ that make deadlock possible and then change one of those conditions.
 In this case, the deadlock is fairly fragile---a very small change
 breaks it.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Dining philosophers hint \#1}
 
 If only four philosophers are allowed at the table at a time,
@@ -3061,7 +3118,7 @@ First, convince yourself that this claim is true, then write code that
 limits the number of philosophers at the table.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Dining philosophers solution \#1}
 
 If there are only four philosophers at the table, then in the
@@ -3122,7 +3179,7 @@ can prove that they are all righties.  Either way you get a
 contradiction; therefore, deadlock is not possible.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Dining philosopher's solution \#2}
 
 In the asymmetric solution to the Dining philosophers problem,
@@ -3144,7 +3201,7 @@ The same argument we used for the previous solution also proves
 that starvation is impossible for this solution.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Tanenbaum's solution}
 
 There is nothing wrong with the previous solutions, but just for
@@ -3220,7 +3277,7 @@ starvation or find a repeating pattern that allows a thread to starve
 while other threads make progress.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Starving Tanenbaums}
 
 Unfortunately, this solution is not starvation-free.  Gingras
@@ -3243,7 +3300,7 @@ So, Tanenbaum's solution doesn't satisfy all the requirements.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section {Cigarette smokers problem}
 
 The cigarette smokers problem problem was originally presented by
@@ -3365,7 +3422,7 @@ agentSem.signal()
 
 What's wrong with this solution?
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Deadlock \#6}
 
 The problem with the previous solution is the possibility
@@ -3377,7 +3434,7 @@ it will also be unblocked.  Then the first thread will block
 on {\tt paper} and the second will block on {\tt match}.
 Deadlock!
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Smokers problem hint}
 
 The solution proposed by Parnas uses three helper threads
@@ -3399,7 +3456,7 @@ is on the table.  The pushers use {\tt tobaccoSem} to signal
 the smoker with tobacco, and the other semaphores likewise.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Smoker problem solution}
 
 Here is the code for one of the pushers:
@@ -3413,7 +3470,7 @@ mutex.wait()
     elif isMatch:
         isMatch = False
         paperSem.signal()
-    else: 
+    else:
         isTobacco = True
 mutex.signal()
 \end{lstlisting}
@@ -3457,7 +3514,7 @@ the table.
 Puzzle: modify the previous solution to deal with this
 variation.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Generalized Smokers Problem Hint}
 
 If the agents don't wait for the smokers, ingredients might
@@ -3469,7 +3526,8 @@ numTobacco = numPaper = numMatch = 0
 \end{lstlisting}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
+\newpage % hand fmt
 \subsection{Generalized Smokers Problem Solution}
 \label{smoker}
 
@@ -3484,7 +3542,7 @@ mutex.wait()
     elif numMatch:
         numMatch -= 1
         paperSem.signal()
-    else: 
+    else:
         numTobacco += 1
 mutex.signal()
 \end{lstlisting}
@@ -3506,14 +3564,14 @@ thread files through the mutex, it checks the state as if looking
 at the scoreboard, and reacts accordingly.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Less classical synchronization problems}
 \label{next}
 
 
 \section{The dining savages problem}
 
-This problem is from Andrews's 
+This problem is from Andrews's
 {\em Concurrent Programming} \cite{andrews}.
 
 \begin {quotation}
@@ -3564,7 +3622,7 @@ Puzzle: Add code for the savages and the cook that
 satisfies the synchronization constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Dining Savages hint}
 
 It is tempting to use a semaphore to keep track of the number of
@@ -3588,7 +3646,7 @@ fullPot = Semaphore(0)
 Not surprisingly, {\tt emptyPot} indicates that the pot is empty and
 {\tt fullPot} indicates that the pot is full.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Dining Savages solution}
 
 My solution is a combination of the scoreboard pattern
@@ -3641,11 +3699,11 @@ guarantee that {\tt putServingsInPot} and {\tt getServingFromPot}
 are executed exclusively?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{The barbershop problem}
 
 The original barbershop problem was proposed by
-Dijkstra.  A variation of it appears in 
+Dijkstra.  A variation of it appears in
 Silberschatz and Galvin's {\em Operating Systems Concepts}
 \cite{silberschatz}.
 
@@ -3667,7 +3725,7 @@ following information:
 
 \item Customer threads should invoke a function named {\tt getHairCut}.
 
-\item If a customer thread arrives when the shop is full, 
+\item If a customer thread arrives when the shop is full,
 it can invoke {\tt balk}, which does not return.
 
 \item Barber threads should invoke {\tt cutHair}.
@@ -3678,7 +3736,7 @@ be exactly one thread invoking {\tt getHairCut} concurrently.
 \end{itemize}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Barbershop hint}
 
 \begin{lstlisting}[caption={Barbershop hint}]{}
@@ -3696,7 +3754,7 @@ shop, then the customer waits on {\tt barber} until the barber
 signals him to take a seat.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Barbershop solution}
 
 Again, my solution combines a scoreboard and a rendezvous.
@@ -3711,7 +3769,7 @@ mutex.wait()
 mutex.signal()
 
 customer.signal()
-barber.wait()        
+barber.wait()
 getHairCut()
 
 mutex.wait()
@@ -3744,7 +3802,7 @@ the naming convention for a rendezvous, so {\tt customer.wait()}
 means ``wait for a customer,'' not ``customers wait here.''
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section {Hilzer's Barbershop problem}
 
 William Stallings \cite{stallings} presents a more complicated version
@@ -3785,7 +3843,7 @@ following synchronization constraints apply:
 \item Customers cannot invoke {\tt enterShop} if the shop
 is at capacity.
 
-\item If the sofa is full, an arriving customer cannot invoke 
+\item If the sofa is full, an arriving customer cannot invoke
 {\tt sitOnSofa} until one of the customers on the sofa invokes {\tt
 sitInBarberChair}.
 
@@ -3840,7 +3898,7 @@ barber and the customers.  The customer signals {\tt barber} and
 then wait on {\tt customer}.  Then the customer signals {\tt cash}
 and waits on {\tt receipt}.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Hilzer's barbershop solution}
 
 There is nothing here that is new; it's just a combination of
@@ -3911,7 +3969,7 @@ way to know which waiting barber will get which signal, but the
 problem specification says that's ok.  Any barber can take
 money from any customer.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{The Santa Claus problem}
 
 This problem is from William Stallings's
@@ -3940,7 +3998,7 @@ Here are some addition specifications:
 
 \begin {itemize}
 
-\item After the ninth reindeer arrives, Santa must invoke 
+\item After the ninth reindeer arrives, Santa must invoke
 {\tt prepareSleigh}, and then all nine reindeer must
 invoke {\tt getHitched}.
 
@@ -3954,9 +4012,9 @@ elves enter (increment the elf counter).
 
 Santa should run in a loop so he can help many sets of elves.
 We can assume that there are exactly 9 reindeer, but there may
-be any number of elves.  
+be any number of elves.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Santa problem hint}
 
 \begin{lstlisting}[caption={Santa problem hint}]{}
@@ -3982,7 +4040,7 @@ The elves use {\tt elfTex} to prevent additional elves from
 entering while three elves are being helped.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Santa problem solution}
 
 Santa's code is pretty straightforward.  Remember that it
@@ -4100,7 +4158,7 @@ Puzzle: Write synchronization code for oxygen and hydrogen
 molecules that enforces these constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {H$_2$O hint}
 
 Here are the variables I used in my solution:
@@ -4127,7 +4185,7 @@ I am using the naming convention for queues, so
 the queue.''
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {H$_2$O solution}
 
 Initially {\tt hydroQueue} and {\tt oxyQueue} are locked.  When
@@ -4232,7 +4290,7 @@ Don't worry about the direction of travel.  Assume we are
 only interested in traffic going in one of the directions.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {River crossing hint}
 
 Here are the variables I used in my solution:
@@ -4261,7 +4319,7 @@ makes sure that all four threads have invoked
 {\tt isCaptain} is a local variable that
 indicates which thread should invoke {\tt row}.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {River crossing solution}
 
 The basic idea of this solution is that each arrival updates
@@ -4277,22 +4335,22 @@ full of bugs, and it contains an embedded web browser):
 mutex.wait()
     hackers += 1
     if hackers == 4:
-        hackerQueue.signal(4)                
+        hackerQueue.signal(4)
 	hackers = 0
 	isCaptain = True
     elif hackers == 2 and serfs >= 2:
-        hackerQueue.signal(2)                
-        serfQueue.signal(2)                  
+        hackerQueue.signal(2)
+        serfQueue.signal(2)
 	serfs -= 2
 	hackers = 0
 	isCaptain = True
     else:
         mutex.signal()      # captain keeps the mutex
 
-hackerQueue.wait()           
+hackerQueue.wait()
 
 board()
-barrier.wait()            
+barrier.wait()
 
 if isCaptain:
     rowBoat()
@@ -4310,7 +4368,7 @@ When the last thread arrives, all threads proceed.
 The captain invoked {\tt row} and then (finally) releases the mutex.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{The roller coaster problem}
 
 This problem is from Andrews's {\em Concurrent
@@ -4344,7 +4402,7 @@ Puzzle: Write code for the passengers and car that enforces these
 constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Roller Coaster hint}
 
 \begin{lstlisting}[caption={Roller Coaster hint}]{}
@@ -4359,14 +4417,14 @@ allAshore = Semaphore(0)
 \end{lstlisting}
 
 {\tt mutex} protects {\tt passengers}, which counts the number of
-passengers that have invoked {\tt boardCar}.  
+passengers that have invoked {\tt boardCar}.
 
 Passengers wait on {\tt boardQueue} before boarding and
 {\tt unboardQueue} before unboarding.  {\tt allAboard}
 indicates that the car is full.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Roller Coaster solution}
 
 Here is my code for the car thread:
@@ -4415,7 +4473,7 @@ the car to stop before leaving.  The last passenger to board signals
 the car and resets the passenger counter.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Multi-car Roller Coaster problem}
 
 This solution does not generalize to the case where there is more
@@ -4443,7 +4501,7 @@ each car has a local variable named {\tt i}
 that contains an identifier between 0 and $m-1$.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Multi-car Roller Coaster hint}
 
 I used two lists of semaphores to keep the cars in order.  One
@@ -4474,7 +4532,7 @@ def next(i):
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Multi-car Roller Coaster solution}
 
 Here is the modified code for the cars:
@@ -4498,7 +4556,7 @@ unloadingArea[next(i)].signal()
 The code for the passengers is unchanged.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Not-so-classical problems}
 
 \section{The search-insert-delete problem}
@@ -4522,7 +4580,7 @@ Puzzle: write code for searchers, inserters and deleters that
 enforces this kind of three-way categorical mutual exclusion.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Search-Insert-Delete hint}
 
 \begin{lstlisting}[caption={Search-Insert-Delete hint}]{}
@@ -4542,7 +4600,7 @@ critical sections; a deleter needs to hold both of these to enter.
 inserters to exclude deleters.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Search-Insert-Delete solution}
 
 Here is my solution:
@@ -4599,7 +4657,7 @@ that avoids starvation.
 \section{The unisex bathroom problem}
 
 I wrote this problem\footnote{Later I learned that a nearly
-identical problem appears in Andrews's 
+identical problem appears in Andrews's
 {\em Concurrent Programming}\cite{andrews}} when a friend of mine
 left her position teaching physics at Colby College
 and took a job at Xerox.
@@ -4627,7 +4685,7 @@ worry about starvation.  You may assume that the bathroom is equipped
 with all the semaphores you need.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Unisex bathroom hint}
 
 Here are the variables I used in my solution:
@@ -4651,7 +4709,7 @@ to enter.  Women do likewise using {\tt femaleSwitch}.
 more than three men and three women in the system at a time.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Unisex bathroom solution}
 
 Here is the female code:
@@ -4668,7 +4726,7 @@ The male code is similar.
 
 Are there any problems with this solution?
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {No-starve unisex bathroom problem}
 
 The problem with the previous solution is that it allows starvation.
@@ -4678,7 +4736,7 @@ waiting, and vice versa.
 Puzzle: fix the problem.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {No-starve unisex bathroom solution}
 
 As we have seen before, we can use a turnstile to allow one
@@ -4797,7 +4855,7 @@ majority rule.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Modus Hall problem hint}
 
 Here are the variables I used in my solution.
@@ -4826,7 +4884,7 @@ so that we can bar one side or the other during a transition.
 checking in and before taking the field.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Modus Hall problem solution}
 
 Here is the code for heathens:
@@ -4866,7 +4924,7 @@ if heathens == 0:
         status = 'prudes rule'
     else:
         status = 'neutral'
-        
+
 if status == 'heathens rule':
     if prudes > heathens:
         status = 'transition to prudes'
@@ -4896,10 +4954,10 @@ joins the queue.
 system is transitioning to prude control.  In either case, this
 thread can proceed.
 
-\end{itemize}  
+\end{itemize}
 
 Similarly, as each student checks out, she has to consider several
-cases.  
+cases.
 
 \begin{itemize}
 
@@ -4915,7 +4973,7 @@ consider the following:
       updates {\tt status} so the prudes are in charge.  If not, the
       new status is 'neutral'.
 
-    \end{itemize}  
+    \end{itemize}
 
 \item If she is not the last heathen to check out, she still has to
 check the possibility that her departure will tip the balance.  In
@@ -4939,11 +4997,11 @@ correctness, if you accept that ``majority rule'' only applies
 to threads that have registered to vote.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \chapter{Not remotely classical problems}
 
 
-% \clearemptydoublepage
+% %\clearemptydoublepage
 \section{The sushi bar problem}
 
 This problem was inspired by a problem proposed by Kenneth Reek \cite{reek}.
@@ -4956,7 +5014,7 @@ sit down.
 Puzzle: write code for customers entering and
 leaving the sushi bar that enforces these requirements.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Sushi bar hint}
 
 Here are the variables I used:
@@ -4975,7 +5033,7 @@ has been) full, som incoming customers have to block
 on {\tt block}.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Sushi bar non-solution}
 
 Here is an incorrect solution Reek uses to illustrate one
@@ -5009,7 +5067,7 @@ mutex.signal()
 Puzzle: what's wrong with this solution?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Sushi bar non-solution}
 
 The problem is at Line~\ref{sushi1}.  If a customer arrives
@@ -5033,7 +5091,7 @@ Puzzle: see if you can come up with two different correct solutions!
 
 Hint: neither solution uses any additional variables.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Sushi bar solution \#1}
 
 The only reason a waiting customer has to reacquire the mutex
@@ -5065,7 +5123,7 @@ if eating == 0:
 mutex.signal()
 \end{lstlisting}
 
-When the last departing customer releases the mutex, 
+When the last departing customer releases the mutex,
 {\tt eating} has already been updated, so newly arriving customers
 see the right state and block if necessary.  Reek calls this
 pattern ``I'll do it for you,'' because the departing thread
@@ -5076,7 +5134,7 @@ A drawback of this approach is that is it a little more difficult
 to confirm that the state is being updated correctly.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Sushi bar solution \#2}
 
 Reek's alternative solution is based on the counterintuitive
@@ -5142,7 +5200,7 @@ A drawback is that it is harder to confirm that the mutex is
 being used correctly.
 
 
-% \clearemptydoublepage
+% %\clearemptydoublepage
 \section{The child care problem}
 
 Max Hailperin wrote this problem for his textbook {\em Operating
@@ -5154,7 +5212,8 @@ Puzzle: Write code for child threads and adult threads that enforces
 this constraint in a critical section.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
+\newpage % hand fmt
 \subsection {Child care hint}
 
 Hailperin suggests that you can {\em almost} solve this problem
@@ -5172,7 +5231,7 @@ But there is a problem with this solution.
 Puzzle: what is the problem?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Child care non-solution}
 
 Here is what the adult code looks like in Hailperin's non-solution:
@@ -5197,7 +5256,7 @@ block.
 Puzzle: solve this problem with a minimal change.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Child care solution}
 
 Adding a mutex solves the problem:
@@ -5240,7 +5299,7 @@ Hint: think about the dancers in Section~\ref{dancers}.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended child care hint}
 
 Here are the variables I used in my solution:
@@ -5262,7 +5321,7 @@ Adupts wait on {\tt adultQueue} to leave.
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended child care solution}
 
 This solution is more complicated than
@@ -5289,7 +5348,7 @@ mutex.wait()
     if leaving and children <= 3 * (adults-1):
         leaving--
         adults--
-        adultQueue.signal() 
+        adultQueue.signal()
 mutex.signal()
 \end{lstlisting}
 
@@ -5299,7 +5358,7 @@ and either (1) increment {\tt children} and enter or (2) increment
 When they exit, they check for an adult thread waiting to leave and
 signal it if possible.
 
-\newpage
+%\newpage
 Here is the code for adults:
 
 \begin{lstlisting}[caption={Extended child care solution (adult)}]{}
@@ -5321,7 +5380,7 @@ mutex.wait()
     else:
         leaving++
         mutex.signal()
-        adultQueue.wait() 
+        adultQueue.wait()
 \end{lstlisting}
 
 As adults enter, they signal waiting children, if any.  Before they
@@ -5374,12 +5433,12 @@ Puzzle: write synchronization code for students and for the
 Dean of Students that enforces all of these constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Room party hint}
 
 \begin{lstlisting}[caption={Room party hint}]{}
-students = 0                
-dean = 'not here'           
+students = 0
+dean = 'not here'
 mutex = Semaphore(1)
 turn = Semaphore(1)
 clear = Semaphore(0)
@@ -5399,7 +5458,7 @@ while the Dean is in the room.
 a student and the Dean (which is a whole other kind of scandal!).
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Room party solution}
 
 This problem is hard.  I worked through a lot of versions before
@@ -5434,7 +5493,7 @@ mutex.wait()
         search()
 
 dean = 'not here'
-mutex.signal() 
+mutex.signal()
 \end{lstlisting}
 
 When the Dean arrives, there are three cases: if there are students in
@@ -5460,7 +5519,7 @@ mutex.wait()
     students += 1
 
     if students == 50 and dean == 'waiting':
-        lieIn.signal()             # and pass mutex to the dean
+        lieIn.signal()         # and pass mutex to the dean
     else:
         mutex.signal()
 
@@ -5493,7 +5552,7 @@ the Dean was waiting on {\tt lieIn} when a student signaled, which
 means, again, that {\tt students} is either 0 or not less than 50.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{The Senate Bus problem}
 
 This problem was originally based on the Senate bus at Wellesley
@@ -5511,7 +5570,7 @@ Puzzle: Write synchronization code that enforces all of these
 constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Bus problem hint}
 
 Here are the variables I used in my solution:
@@ -5535,7 +5594,7 @@ bus waits on {\tt allAboard}, which gets signaled by the last
 student to board.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Bus problem solution \#1}
 
 Here is the code for the bus.  Again, we are using the
@@ -5571,7 +5630,7 @@ boardBus()
 
 riders -= 1
 if riders == 0:
-    allAboard.signal() 
+    allAboard.signal()
 else:
     bus.signal()            # and pass the mutex
 \end{lstlisting}
@@ -5593,7 +5652,7 @@ Puzzle: can you find a solution to this problem using the
 ``I'll do it for you'' pattern?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Bus problem solution \#2}
 
 Grant Hutchins came up with this solution, which uses fewer
@@ -5653,7 +5712,7 @@ find a solution that allows late arrivals to board without violating
 the other constraints?
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{The Faneuil Hall problem}
 
 This problem was written by Grant Hutchins, who was inspired
@@ -5693,7 +5752,7 @@ has executed {\tt confirm}.
 
 \end{itemize}
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Faneuil Hall Problem Hint}
 
 \begin{lstlisting}[caption={Faneuil Hall problem hint}]{}
@@ -5713,7 +5772,7 @@ number of immigrants who have checked in; it is protected by
 {\tt confirmed} signals that the judge has executed {\tt confirm}.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Faneuil Hall problem solution}
 
 Here is the code for immigrants:
@@ -5747,7 +5806,7 @@ noJudge.signal()
 Immigrants pass through a turnstile when they enter; while the
 judge is in the room, the turnstile is locked.
 
-After entering, immigrants have to get {\tt mutex} to check 
+After entering, immigrants have to get {\tt mutex} to check
 in and update {\tt checked}.  If there is a judge waiting, the
 last immigrant to check in signals {\tt allSignedIn} and passes
 the mutex to the judge.
@@ -5763,7 +5822,7 @@ judge = 1
 
 if entered > checked:
     mutex.signal()
-    allSignedIn.wait()               # and get the mutex back.
+    allSignedIn.wait()         # and get the mutex back.
 
 confirm()
 confirmed.signal(checked)
@@ -5818,7 +5877,7 @@ that after the judge leaves, all immigrants who have been sworn
 in must leave before the judge can enter again.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended Faneuil Hall Problem Hint}
 
 My solution uses the following additional variables:
@@ -5835,7 +5894,7 @@ One other hint: I found it useful to use the ``pass the baton''
 pattern again.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended Faneuil Hall problem solution}
 
 The top half of this solution is the same as before.  The
@@ -5853,7 +5912,7 @@ checkIn()
 checked++
 
 if judge = 1 and entered == checked:
-    allSignedIn.signal()              # and pass the mutex
+    allSignedIn.signal()             # and pass the mutex
 else:
     mutex.signal()
 
@@ -5895,7 +5954,7 @@ judge = 1
 
 if entered > checked:
     mutex.signal()
-    allSignedIn.wait()               # and get the mutex back.
+    allSignedIn.wait()              # and get the mutex back.
 
 confirm()
 confirmed.signal(checked)
@@ -5913,11 +5972,11 @@ noJudge.signal()
 The spectator code for the extended problem is unchanged.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{Dining Hall problem}
 
 This problem was written by Jon Pollack during my Synchronization
-class at Olin College.  
+class at Olin College.
 
 Students in the dining hall invoke {\tt dine} and then {\tt leave}.
 After invoking {\tt dine} and before invoking {\tt leave} a student is
@@ -5932,7 +5991,7 @@ before she has finished {\tt dine}.
 Puzzle: write code that enforces this constraint.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Dining Hall problem hint}
 
 \begin{lstlisting}[caption={Dining Hall problem hint}]{}
@@ -5952,14 +6011,14 @@ left alone at the table, she waits on
 the situation and signals.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Dining Hall problem solution}
 
 If you analyze the constraints, you will realize that there
 is only one situation where a student has to wait, if there is
 one student eating and one student who wants to leave.  But
 there are two ways to get out of this situation: another
-student might arrive to eat, or the dining student might 
+student might arrive to eat, or the dining student might
 finish.
 
 In either case, the student who signals the waiting student
@@ -6043,7 +6102,7 @@ before she has finished {\tt dine}.
 Puzzle: write code that enforces these constraints.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended Dining Hall problem hint}
 
 Here are the variables I used in my solution:
@@ -6069,7 +6128,7 @@ I also used a per-thread variable named {\tt hasMutex} to help
 keep track of whether or not a thread holds the mutex.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Extended Dining Hall problem solution}
 
 Again, if we analyze the constraints, we realize that there is
@@ -6130,18 +6189,18 @@ waiting to leave, since no one can leave an empty table!
 
 
 
-%\clearemptydoublepage
+%%\clearemptydoublepage
 %\section{Party problem}
 
 %Description
 
-%\clearemptydoublepage
+%%\clearemptydoublepage
 %\subsection {Party problem hint}
 
 %\begin{lstlisting}[caption={Party problem hint}]{}
 %\end{lstlisting}
 
-%\clearemptydoublepage
+%%\clearemptydoublepage
 %\subsection {Party problem solution}
 
 %\begin{lstlisting}[caption={Party problem solution}]{}
@@ -6284,7 +6343,7 @@ end = 100000, {1: 27561, 2: 72439}
 Oops!  When {\tt end} is big enough that there are a lot of
 context switches between the children, we start to get synchronization
 errors.  In this case, we get a {\em lot} of errors, which suggests
-that the program falls into a recurring pattern where threads are 
+that the program falls into a recurring pattern where threads are
 consistently interrupted in the critical section.
 
 This example demonstrates one of the dangers of synchronization
@@ -6297,7 +6356,7 @@ exclusive access to the shared variables.  You can download the
 code in this section from \url{greenteapress.com/semaphores/counter.py}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Mutex checker hint}
 
 Here is the version of {\tt Shared} I used:
@@ -6314,7 +6373,7 @@ class Shared:
 The only change is the Semaphore named {\tt mutex}, which should
 come as no surprise.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Mutex checker solution}
 
 Here is my solution:
@@ -6348,7 +6407,7 @@ Of course, that doesn't mean my solution is correct, but it is
 off to a good start.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section {The coke machine problem}
 
 The following program simulates producers and consumers
@@ -6376,7 +6435,7 @@ def loop(shared, f, mu=1):
         f(shared)
 
 shared = Shared()
-fs = [consume]*2 + [produce]*2 
+fs = [consume]*2 + [produce]*2
 threads = [Thread(loop, shared, f) for f in fs]
 for thread in threads: thread.join()
 \end{lstlisting}
@@ -6419,7 +6478,7 @@ You can download the program from
 \url{greenteapress.com/semaphores/coke.py}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Coke machine hint}
 
 Here are the shared variables I used in my solution:
@@ -6432,7 +6491,7 @@ class Shared:
         self.mutex = Semaphore(1)
 \end{lstlisting}
 
-{\tt cokes} is a Semaphore now (rather than a simple integer), 
+{\tt cokes} is a Semaphore now (rather than a simple integer),
 which makes it tricky to print its value.  Of course, you
 should never access the value of a Semaphore, and Python in
 its usual do-gooder way doesn't provide any of the cheater
@@ -6448,7 +6507,7 @@ but I thought you might be interested.
 Ahem.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection {Coke machine solution}
 
 If you've read the rest of this book, you should have had no
@@ -6626,7 +6685,7 @@ Puzzle: use semaphores to enforce exclusive access to the shared
 variables and run the program again to confirm that there are
 no errors.
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Mutual exclusion hint}
 
 Here is the version of {\tt Shared} I used in my solution:
@@ -6660,7 +6719,7 @@ Line~\ref{declaremutex} declares {\tt mutex} as a Semaphore;
 Line~\ref{initmutex} initializes the mutex with the value 1.
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Mutual exclusion solution}
 
 Here is the synchronized version of the child code:
@@ -6686,11 +6745,11 @@ There is nothing too surprising here; the only tricky thing
 is to remember to release the mutex before the {\tt return}
 statement.
 
-You can download this solution from 
+You can download this solution from
 \url{greenteapress.com/semaphores/counter_mutex.c}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \section{Make your own semaphores}
 \label{makeyourown}
 
@@ -6712,7 +6771,7 @@ Mutex *make_mutex ()
 {
   Mutex *mutex = check_malloc (sizeof(Mutex));
   int n = pthread_mutex_init (mutex, NULL);
-  if (n != 0) perror_exit ("make_lock failed"); 
+  if (n != 0) perror_exit ("make_lock failed");
   return mutex;
 }
 
@@ -6737,7 +6796,7 @@ typedef pthread_cond_t Cond;
 
 Cond *make_cond ()
 {
-  Cond *cond = check_malloc (sizeof(Cond)); 
+  Cond *cond = check_malloc (sizeof(Cond));
   int n = pthread_cond_init (cond, NULL);
   if (n != 0) perror_exit ("make_cond failed");
   return cond;
@@ -6758,7 +6817,7 @@ void cond_signal (Cond *cond)
 
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Semaphore implementation hint}
 
 Here is the structure definition I used for my semaphores:
@@ -6796,7 +6855,7 @@ Semaphore *make_semaphore (int value)
 \end{lstlisting}
 
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Semaphore implementation}
 
 Here is my implementation of semaphores using Pthread's mutexes
@@ -6830,7 +6889,7 @@ void sem_signal (Semaphore *semaphore)
 }
 \end{lstlisting}
 
-Most of this is straightforward; the only thing that might be 
+Most of this is straightforward; the only thing that might be
 tricky is the {\tt do...while} loop at Line~\ref{dowhile}.
 This is an unusual way to use a condition variable, but in
 this case it is necessary.
@@ -6838,7 +6897,7 @@ this case it is necessary.
 Puzzle: why can't we replace this {\tt do...while} loop
 with a {\tt while} loop?
 
-\clearemptydoublepage
+%\clearemptydoublepage
 \subsection{Semaphore implementation detail}
 
 With a {\tt while} loop, this implementation would not have
@@ -6876,7 +6935,7 @@ my way by subclassing the version of Semaphore in the
 
 \begin{lstlisting}[caption={Semaphore name change}]{}
 import threading
- 
+
 class Semaphore(threading._Semaphore):
     wait = threading._Semaphore.acquire
     signal = threading._Semaphore.release
@@ -6941,7 +7000,7 @@ threads = [Thread(function, i, i, i) for i in range(10)]
 
 \section{Handling keyboard interrupts}
 
-One other problem with the {\tt threading} class is that 
+One other problem with the {\tt threading} class is that
 {\tt Thread.join} can't be interrupted by Ctrl-C, which
 generates the signal {\tt SIGINT}, which Python translates
 into a KeyboardInterrupt.
@@ -6965,7 +7024,7 @@ def child_code(n=10):
     for i in range(n):
         print i
         time.sleep(1)
-    
+
 parent_code()
 \end{lstlisting}
 
@@ -7133,7 +7192,7 @@ semaphores, which I will get to in a minute.
 
 If {\tt pthread\_create} succeeds, it returns 0 and my function
 returns the handle of the new thread.
-If an error occurs, {\tt pthread\_create} 
+If an error occurs, {\tt pthread\_create}
 returns an error code and my function prints an error message
 and exits.
 
@@ -7232,7 +7291,7 @@ a bad idea.  In POSIX, the behavior of the copy is undefined.
 In my programs, I use capital letters to denote types with
 structure semantics, and I always manipulate them with pointers.
 Fortunately, it is easy to put a wrapper around {\tt sem\_t}
-to make it behave like a proper object.  Here is the 
+to make it behave like a proper object.  Here is the
 {\tt typedef} and the wrapper that creates and initializes
 semaphores:
 
@@ -7245,7 +7304,7 @@ Semaphore *make_semaphore (int n)
   int ret = sem_init(sem, 0, n);
   if (ret == -1) {
     perror ("sem_init failed");
-    exit (-1);    
+    exit (-1);
   }
   return sem;
 }
@@ -7282,4 +7341,3 @@ int sem_signal(Semaphore *sem)
 That's enough cleanup for now.
 
 \end{document}
-
