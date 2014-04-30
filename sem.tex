@@ -19,15 +19,17 @@
 \usepackage{graphicx,epstopdf}
 \usepackage{xcolor}
 \usepackage{url}
-\usepackage{makeidx}
+%\usepackage{makeidx}
 
 %\definecolor{cadetblue}{RGB}{116,114,154}
 \definecolor{electricblue}{RGB}{66,139,202}
 \definecolor{royalblue}{RGB}{71,57,146}
 \usepackage[colorlinks=true, citecolor=gray, linkcolor=royalblue,
-    urlcolor=electricblue]{hyperref}
+    urlcolor=electricblue, pdfborder={0 0 0}]{hyperref}
 
-\usepackage{tgschola}
+\usepackage{fourier}
+\usepackage[scale=.9]{sourcesanspro}
+\usepackage[scale=.9]{sourcecodepro}
 \usepackage[T1]{fontenc}
 \usepackage{microtype}
 
@@ -67,7 +69,8 @@
 \cfoot{}
 
 % Commands that control the appearance of the listings
-\definecolor{lightgray}{gray}{0.95}
+%\definecolor{lightgray}{gray}{0.95}
+\definecolor{lightgray}{RGB}{253,253,253}
 
 \lstset{basicstyle=\tt, stepnumber=1, frame=tblr,
 backgroundcolor=\color{lightgray}, escapeinside={(*}{*)}}
@@ -77,10 +80,9 @@ backgroundcolor=\color{lightgray}, escapeinside={(*}{*)}}
 %
 % http://amyrhoda.wordpress.com/2012/05/30/latex-to-lulu-
 % the-making-of-aosa-table-of-contents-and-chapter-titles/
-\usepackage{tocloft}
-\renewcommand{\cftchapfont}{\normalfont\rmfamily}
+%\usepackage{tocloft}
 
-\makeindex
+%\makeindex
 
 \begin{document}
 \title {The Little Book of Semaphores}
@@ -342,7 +344,7 @@ book and found some typos.
 % endcontrib
 
 \newpage
-\tableofcontents
+{\sffamily\tableofcontents}
 %\clearemptydoublepage
 
 \mainmatter
@@ -1284,7 +1286,7 @@ this.  They hand out tokens (sometimes poker chips) to
 customers in line.  Each token allows the holder to buy a ticket.
 
 
-
+\newpage
 
 \section{Barrier}
 
@@ -1388,7 +1390,7 @@ execution path through this code that does {\em not} cause a deadlock?
 
 Puzzle: Fix the problem.
 
-
+\newpage
 %\clearemptydoublepage
 \subsection{Barrier solution}
 \label{barrier}
@@ -1684,6 +1686,8 @@ non-standard feature, but it would be easy to implement with a loop.
 The only thing to keep in mind is that the multiple signals are not
 atomic; that is, the signaling thread might be interrupted in the
 loop.  But in this case that is not a problem.
+
+\newpage
 
 \begin{lstlisting}[caption={Reusable barrier solution}]{}
 # rendezvous
@@ -2402,6 +2406,8 @@ be true'' and ``signal'' means ``signal that the condition is true''.
 The code for writers is simple.  If the critical section
 is empty, a writer may enter, but entering has the effect
 of excluding all other threads:
+
+\newpage
 
 \begin{lstlisting}[caption={Writers solution}]{}
 roomEmpty.wait()
